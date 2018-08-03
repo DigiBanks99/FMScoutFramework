@@ -1,39 +1,30 @@
-﻿using System;
-using System.Reflection;
+﻿using FMScoutFramework.Core.Entities.GameVersions;
+using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Configuration;
-using System.IO;
-using FMScoutFramework.Core.Entities.GameVersions;
+using System.Reflection;
 
 namespace FMScoutFramework.Core.Managers
 {
-	public class GameManager
-	{
-		private bool fmLoaded;
-		private bool fmLoading;
+    public class GameManager : IGameManager
+    {
+        public GameManager()
+        {
+            FMLoaded = false;
+            FMLoading = false;
+        }
 
-		public GameManager ()
-		{
-			this.fmLoaded = false;
-			this.fmLoading = false;
-		}
+        public bool FMLoaded { get; private set; }
 
-		public bool FMLoaded {
-			get { return fmLoaded; }
-		}
+        public bool FMLoading { get; set; }
 
-		public bool FMLoading {
-			get { return fmLoading; }
-			set { fmLoading = value; }
-		}
+        public IVersion Version
+        {
+            get;
+            private set;
+        }
 
-		public IVersion Version {
-			get;
-			private set;
-		}
-
-		#if LINUX
+#if LINUX
 		// Finds the process and loads it in memory
 		public bool findFMProcess ()
 		{
@@ -87,8 +78,8 @@ namespace FMScoutFramework.Core.Managers
 
 			return fmLoaded;
 		}
-		#endif
-		#if MAC
+#endif
+#if MAC
 		public bool findFMProcess() {
 			FMProcess fmProcess = new FMProcess ();
 			Process[] fmProcesses = Process.GetProcessesByName ("fm");
@@ -115,7 +106,7 @@ namespace FMScoutFramework.Core.Managers
 
 				fmLoaded = (Version != null);
 
-				#region ObjectScanner
+        #region ObjectScanner
 				if (!fmLoaded)
 				{
 					int i;
@@ -141,52 +132,57 @@ namespace FMScoutFramework.Core.Managers
 						}
 					}
 				}
-				#endregion
+        #endregion
 			}
 
 			return fmLoaded;
 		}
-		#endif
-		#if WINDOWS
-		public bool findFMProcess() {
-			FMProcess fmProcess = new FMProcess ();
-			Process[] fmProcesses = Process.GetProcessesByName ("fm");
+#endif
+#if WINDOWS
+        public bool findFMProcess()
+        {
+            FMProcess fmProcess = new FMProcess();
+            Process[] fmProcesses = Process.GetProcessesByName(FMScoutFrameworkConfigurationManager.Instance.ProcessName);
 
-			if (fmProcesses.Length > 0) {
-				Process activeProcess = fmProcesses [0];
+            if (fmProcesses.Length > 0)
+            {
+                Process activeProcess = fmProcesses[0];
 
-				fmProcess.Pointer = ProcessMemoryAPI.OpenProcess (0x001F0FFF, 1, (uint)activeProcess.Id);
-				fmProcess.EndPoint = ProcessManager.GetProcessEndPoint (fmProcess.Pointer);
-				fmProcess.Process = activeProcess;
-                fmProcess.BaseAddress = activeProcess.MainModule.BaseAddress.ToInt32();
+                fmProcess.Pointer = ProcessMemoryAPI.OpenProcess(0x001F0FFF, 1, (uint)activeProcess.Id);
+                fmProcess.EndPoint = ProcessManager.GetProcessEndPoint(fmProcess.Pointer);
+                fmProcess.Process = activeProcess;
+                fmProcess.BaseAddress = activeProcess.MainModule.BaseAddress;
 
-				ProcessManager.fmProcess = fmProcess;
-				fmProcess.VersionDescription = fmProcess.Process.MainModule.FileVersionInfo.ProductVersion;
+                ProcessManager.fmProcess = fmProcess;
+                fmProcess.VersionDescription = fmProcess.Process.MainModule.FileVersionInfo.ProductVersion;
 
-				// Search for the current version
-				foreach (var versionType in Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(IIVersion).IsAssignableFrom(t))) {
-					if (versionType.IsInterface)
-						continue;
-					var instance = (IIVersion)Activator.CreateInstance (versionType);
+                // Search for the current version
+                foreach (var versionType in Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(IIVersion).IsAssignableFrom(t)))
+                {
+                    if (versionType.IsInterface)
+                        continue;
+                    var instance = (IIVersion)Activator.CreateInstance(versionType);
 
-					if (instance.SupportsProcess (fmProcess, null)) {
-						Version = instance;
-						break;
-					}
-				}
+                    if (instance.SupportsProcess(fmProcess, null))
+                    {
+                        Version = instance;
+                        break;
+                    }
+                }
 
-				fmLoaded = (Version != null);
+                FMLoaded = (Version != null);
 
-                if (!fmLoaded)
+                if (!FMLoaded)
                 {
                     int i;
                     // Try to find info about the version
                     // Lookup the objects in the memory
-                    for (i = (fmProcess.BaseAddress + 0x1A8484E); i < fmProcess.EndPoint; i += 4)
+                    for (i = ((int)fmProcess.BaseAddress + 0x1A8484E); i < fmProcess.EndPoint; i += 4)
                     {
                         int cities, clubs, leagues, stadiums, teams, continents, countries, persons;
                         string[] splitVersion = fmProcess.VersionDescription.Split('.');
-                        if (splitVersion[0] == "14") {
+                        if (splitVersion[0] == "14")
+                        {
                             cities = TryGetPointerObjects(i, 0x14, fmProcess);
                             clubs = TryGetPointerObjects(i, 0x1C, fmProcess);
                             leagues = TryGetPointerObjects(i, 0x24, fmProcess);
@@ -218,24 +214,25 @@ namespace FMScoutFramework.Core.Managers
                         }
                     }
                 }
-			}
-			return fmLoaded;
-		}
-		#endif
+            }
+            return FMLoaded;
+        }
+#endif
 
-		public static int TryGetPointerObjects(int address, int offset, FMProcess fmProcess) {
-			return GameManager.TryGetPointerObjects (address, offset, fmProcess, "15");
-		}
-
-		public static int TryGetPointerObjects(int address, int offset, FMProcess fmProcess, string masterVersion)
+        public static int TryGetPointerObjects(int address, int offset, FMProcess fmProcess)
         {
-			#if WINDOWS
+            return GameManager.TryGetPointerObjects(address, offset, fmProcess, "15");
+        }
+
+        public static int TryGetPointerObjects(int address, int offset, FMProcess fmProcess, string masterVersion)
+        {
+#if WINDOWS
             int memoryAddress = ProcessManager.ReadInt32(address);
             Debug.WriteLine("Base 0x{0:X} -> 0x{1:X}", address, memoryAddress);
-            if (memoryAddress > fmProcess.BaseAddress && memoryAddress < fmProcess.EndPoint)
+            if (memoryAddress > (int)fmProcess.BaseAddress && memoryAddress < fmProcess.EndPoint)
             {
                 memoryAddress = ProcessManager.ReadInt32(memoryAddress);
-                if (memoryAddress < fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
+                if (memoryAddress < (int)fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
                     return 0;
 
                 string[] splitVersion = fmProcess.VersionDescription.Split('.');
@@ -244,26 +241,26 @@ namespace FMScoutFramework.Core.Managers
                     int xorValueOne = ProcessManager.ReadInt32(memoryAddress + offset + 0x4);
                     int xorValueTwo = ProcessManager.ReadInt32(memoryAddress + offset);
                     memoryAddress = xorValueTwo ^ xorValueOne;
-                    if (memoryAddress < fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
+                    if (memoryAddress < (int)fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
                         return 0;
                     memoryAddress = ProcessManager.ReadInt32(memoryAddress + 0x54);
                 }
                 else
                 {
                     memoryAddress = ProcessManager.ReadInt32(memoryAddress + offset);
-                    if (memoryAddress < fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
+                    if (memoryAddress < (int)fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
                         return 0;
                     memoryAddress = ProcessManager.ReadInt32(memoryAddress + 0x40);
                 }
-                
-                if (memoryAddress < fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
+
+                if (memoryAddress < (int)fmProcess.BaseAddress || memoryAddress > fmProcess.EndPoint)
                     return 0;
 
                 int numberOfObjects = ProcessManager.ReadArrayLength(memoryAddress);
                 return numberOfObjects;
             }
-			#endif
-			#if MAC
+#endif
+#if MAC
 			int memoryAddress = ProcessManager.ReadInt32 (address);
 			if (masterVersion == "14") {
 				memoryAddress = ProcessManager.ReadInt32 (address + 0x1C);
@@ -292,17 +289,17 @@ namespace FMScoutFramework.Core.Managers
 				int numberOfObjects = ProcessManager.ReadArrayLength(memoryAddress);
 				return numberOfObjects;
 			}
-			#endif
-			#if LINUX
+#endif
+#if LINUX
 			int memoryAddress = ProcessManager.ReadInt32 (address);
 			memoryAddress = ProcessManager.ReadInt32(memoryAddress + offset);
 			memoryAddress = ProcessManager.ReadInt32(memoryAddress + 0x5c);
 
 			int numberOfObjects = ProcessManager.ReadArrayLength(memoryAddress);
 			return numberOfObjects;
-			#endif
-			return 0;
+#endif
+            return 0;
         }
-	}
+    }
 }
 

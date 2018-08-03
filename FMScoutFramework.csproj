@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Linux-Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,7 +7,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>FMScoutFramework</RootNamespace>
     <AssemblyName>FMScoutFramework</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Linux-Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,6 +45,39 @@
     <DefineConstants>RELEASE;WINDOWS;</DefineConstants>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Linux-Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Linux-Debug\</OutputPath>
+    <DefineConstants>DEBUG;LINUX;</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Linux-Release|x64'">
+    <OutputPath>bin\x64\Linux-Release\</OutputPath>
+    <DefineConstants>RELEASE;LINUX;</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Windows-Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Windows-Debug\</OutputPath>
+    <DefineConstants>DEBUG;WINDOWS;</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Windows-Release|x64'">
+    <OutputPath>bin\x64\Windows-Release\</OutputPath>
+    <DefineConstants>RELEASE;WINDOWS;</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -52,9 +86,12 @@
     <Compile Include="Defines\Versions\Steam_16_3_1_Windows.cs" />
     <Compile Include="Defines\Versions\Steam_16_3_0_Windows.cs" />
     <Compile Include="Defines\Versions\Steam_16_3_2_Windows.cs" />
-    <Compile Include="FMCore.cs" />
+    <Compile Include="FmCore.cs" />
     <Compile Include="Attributes\MemoryAddressAttribute.cs" />
     <Compile Include="Converters\DateConverter.cs" />
+    <Compile Include="FMScoutFrameworkConfigurationManager.cs" />
+    <Compile Include="IFmCore.cs" />
+    <Compile Include="MetaDataCls.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Defines\Versions\IPersonVersionOffsets.cs" />
     <Compile Include="Defines\Versions\IVersion.cs" />
@@ -124,6 +161,9 @@
     <Compile Include="Entities\Ingame\Interfaces\IRivalNation.cs" />
     <Compile Include="Entities\Ingame\Interfaces\ITeam.cs" />
     <Compile Include="Utilities\BitwiseOperations.cs" />
+    <Compile Include="VirtualMemory\Managers\GameManager64.cs" />
+    <Compile Include="VirtualMemory\Managers\IGameManager.cs" />
+    <Compile Include="VirtualMemory\ProcessMemoryAPI64.cs" />
     <Compile Include="VirtualMemory\ProcessMemoryAPI.cs" />
     <Compile Include="VirtualMemory\Managers\GameManager.cs" />
     <Compile Include="VirtualMemory\Managers\ObjectManager.cs" />
@@ -137,7 +177,7 @@
     <None Include="FMScoutFramework.csproj" />
     <None Include="FMScoutFramework.sln" />
     <None Include="README.md" />
-    <None Include="app.config" />
+    <None Include="App.config" />
     <None Include="VirtualMemory\ExternalSharedLibraries\libprocessmemoryapi.dylib" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

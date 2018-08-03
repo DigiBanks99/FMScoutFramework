@@ -24,9 +24,9 @@ namespace FMScoutFramework.Core.Managers
 		public Dictionary<Type, object>ObjectStore = new Dictionary<Type, object>();
 		private const int BufferSizeStaff = 16*1024*1024;
 		public readonly DatabaseModeEnum DatabaseMode;
-		public readonly GameManager GameManager;
+		public readonly IGameManager GameManager;
 
-		public ObjectManager (GameManager gameManager, DatabaseModeEnum databaseMode)
+		public ObjectManager (IGameManager gameManager, DatabaseModeEnum databaseMode)
 		{
 			DatabaseMode = databaseMode;
 			GameManager = gameManager;
@@ -227,7 +227,7 @@ namespace FMScoutFramework.Core.Managers
 
             // On windows, we have ASLR, so get the main pointer from the static offset
             #if WINDOWS
-            int memoryAddress = ProcessManager.ReadInt32(ProcessManager.fmProcess.BaseAddress + GameManager.Version.MemoryAddresses.MainAddress);
+            int memoryAddress = ProcessManager.ReadInt32((int)ProcessManager.fmProcess.BaseAddress + GameManager.Version.MemoryAddresses.MainAddress);
             //memoryAddress = ProcessManager.ReadInt32(memoryAddress);
             #endif
 

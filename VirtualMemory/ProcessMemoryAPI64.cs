@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace FMScoutFramework
 {
-    internal sealed class ProcessMemoryAPI
+    internal sealed class ProcessMemoryAPI64
     {
 #if MAC
 		[DllImport("libprocessmemoryapi.dylib")]

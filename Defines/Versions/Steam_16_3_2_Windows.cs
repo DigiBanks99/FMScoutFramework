@@ -39,7 +39,7 @@ namespace FMScoutFramework.Core.Entities.GameVersions
 #if WINDOWS
             if (process.VersionDescription != "16.3.2f830543") return false;
 
-            var dt = ProcessManager.ReadDateTime(process.BaseAddress + MemoryAddresses.CurrentDateTime);
+            var dt = ProcessManager.ReadDateTime((int)process.BaseAddress + MemoryAddresses.CurrentDateTime);
             if (dt.Year < 2012 || dt.Year > 2150)
             {
                 Console.WriteLine("Failed!");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,7 +15,7 @@ namespace FMScoutFrameworkTest
 {
     public partial class Form1 : Form
     {
-        public FMCore fmCore = new FMCore(FMScoutFramework.Core.Entities.DatabaseModeEnum.Realtime);
+        public FmCore fmCore = new FmCore(FMScoutFramework.Core.Entities.DatabaseModeEnum.Realtime, true);
         public Form1()
         {
             InitializeComponent();
